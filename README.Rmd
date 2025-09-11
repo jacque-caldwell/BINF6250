@@ -1,0 +1,84 @@
+---
+title: "project01/README"
+names:  Jacqueline Caldwell, Micheal Bambha
+output: html_document
+---
+
+# Introduction
+Project One:
+Read in clinvar.vcf file; to identify AF_EXAC (allele frequencies) showing
+rarity of the variant ; and create a list of associated clinical disease 
+varients.
+
+# Pseudocode
+Put pseudocode in this box:
+
+```
+glob_count_clinical_diseases = 0
+glob_clinical_diseases = ""
+
+def parse_line(str1)
+# Note string sent will have \n at the end.
+  Look for "AF_EXAC" in str1 and get value afterwards (dictionary)
+  Look for "CLND" and get value(s)? afterwards (dictionary)
+     if value is < 0.0001
+      if (ASSOCIATED_DISEASE != "") and (ASSOCIATED_DISEASES != 'not_specified') and (ASSOCIATED_DISEASES != 'not_provided')
+        return ASSOCIATED_DISEASES string
+      else
+        return ""
+
+def read_next_line(fp):
+  # fp = file pointer
+  # needs to return string with \n at end
+     index = seek(fp,1) # read next character in file line
+     while ( index != EOF ) and index is not '\n'
+        line_string = line_string + single index character
+        seek index forward one character
+        
+    # At this point first character should be the start of     
+     If index == EOF 
+          return ""   # I may be missing the last line.....
+     elif: character is "\n"
+          assoc_diseases = parse_string (line_string)
+     else:
+          add character to string
+          seek to next character.
+    append assoc_diseases to global_clinical_diseases
+    global_clinical_diseases++
+    return 
+
+def read_file(file_name_str):
+  file_pointer = open(file_name_str)
+  
+  Move file_pointer past file header before starting "read_line process"
+      then...
+      
+  while file_pointer not at EOF:
+      next_line = read_next_line(file_pointer) 
+      
+  close(file_pointer)
+  
+read_file("clinvar_20190923_short.vcf)
+```
+
+# Successes
+Description of the team's learning points
+
+# Struggles
+Difficulty uploading files to GitHub; if working "on-demand"; must move files 
+from server to my private machine, and then push them to github.  Tried working
+on RStudio on my Mac, but it doesn't have KnitR ; tried colab but it uses 
+different ways of setting current directories; but colab has a better debugging
+situation.
+
+
+# Personal Reflections
+## Group Leader
+Group leader's reflections on the project
+
+## Other member
+Other members' reflections on the project
+
+# Generative AI Appendix
+As per the syllabus
+
