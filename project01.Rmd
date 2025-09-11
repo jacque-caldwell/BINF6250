@@ -1,0 +1,97 @@
+---
+title: "project01"
+name(s):  Jacqueline Caldwell, Micheal Bambha
+class: BINF 6250; Fall, 2025
+output: 
+  github_document:
+    toc: true
+    toc_depth: 2
+    html_preview: false
+ 
+  
+The problem:
+    Within the program:
+      1. Write a function called parse_line that:
+        a. Takes a string as an argument
+        b. Extract the AF_EXAC data to determine the rarity of the variant
+          i. If AF_EXAC is not present, skip the line
+          ii.  If the variant is rare (value for the AF_EXAC key < 0.0001)
+             return a list of associated diseases in CLNDN
+               Do not count the diseases that are:
+                    not_specified
+                    not_provided
+         iii. If the variant is not rare:
+             return an empty list
+    2.  Write another function called read_file that:
+      a. Takes a string as an argument representing the file to be opened
+      b. Open the file
+      c. Read the file line by line.
+         Note: You are expected to do this one line at a time. The reasoning is that 
+         if the file is sufficiently large, you may not have the memory available to hold it. 
+         So, do not use readlines()!
+      d. Passes the line to parse_line
+      e. Use a dictionary to count the results given by parse_line to keep a 
+      running tally (or count) of the number of times a specific disease is observed
+      f. return that dictionary
+    4. print the results from read_file when it is complete
+    
+
+PSEUDO CODE
+
+CLDN = ""
+
+def parse_line(str1)
+# Note string sent will have \n at the end.
+  Look for "AF_EXAC" and get value afterwards.
+     if value is < 0.0001
+      if (ASSOCIATED_DISEASES !=) and (ASSOCIATED_DISEASES != 'not_specified') and (ASSOCIATED_DISEASES != 'not_provided')
+        return ASSOCIATED_DISEASES string
+      else
+        return ""
+
+def read_next_line(fp):
+  # fp = file pointer
+  # needs to return string with \n at end
+     index = seek(fp,1) # read next character in file line
+     while ( index != EOF ) and index is not '\n'
+        line_string = line_string + single index character
+        seek index forward one character
+        
+    # At this point first character should be the start of     
+     If index == EOF 
+          return ""   # I may be missing the last line.....
+     elif: character is "\n"
+          parse_string (line_string)
+     else:
+          add character to string
+          seek to next character.
+    return 
+
+def read_file(file_name_str):
+  file_pointer = open(file_name_str)
+  
+  while file_pointer not at EOF:
+      next_line = read_next_line(file_pointer) 
+      
+  close(file_pointer)
+  
+  
+---
+
+```{python}
+#!/usr/bin/env python
+from pprint import pprint
+
+
+# Modify this function signature and fill in the details
+def parse_line():
+
+def read_file():
+  
+
+
+if __name__ == "__main__":
+    pprint(read_file("clinvar_20190923_short.vcf"))
+
+```
+
