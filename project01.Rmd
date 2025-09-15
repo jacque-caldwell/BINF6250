@@ -35,7 +35,7 @@ ExAC has become the Genome Aggregation Databse: gnomAD as noted above.
 
 
 # Initial Pseudo Code
-'''{pseduo code
+```{ }
 CLDN = ""
 
 def parse_line(str1)
@@ -72,7 +72,7 @@ def read_file(file_name_str):
       next_line = read_next_line(file_pointer) 
       
   close(file_pointer)
-}
+```
 
 # Python Code
 ```{python}
@@ -156,19 +156,23 @@ Description of the team's learning points
 
 # Struggles
 Challenges faced with this project:
+
   1. I have had limited use of strings in python and reading file use in my prior python class (we were encouraged to use data sets 
   that used functions that were included by libraries already, or were similar to read file functions that would populate entire 
   data frames in a single read function.  I have done parsing and reading of files in C, and know what I want to do, just not 
   always the way to do it in python.   I found myself looking up a lot of stuff, but I expect this to get better over time. I do have
   something done, but it's likely more C-like than python-like.  I will work with my teammate on this.
+  
   2. No/little knowledge of programming,debugging in IDE of RStudio or Visual Studio Code.  Prior python coding was done exclusively 
   on google Colab.   Still working on this, but I have decided that I will be working with Visual Studio Code as an IDE, and somehow 
   moving the code over to the RStudio program on NU cluster system.  Debugging error messages and codding on RStudio is awkward at best.
+  
   3. No prior knowledge of cluster programming, no prior use of submitting scripts to be run overnight, etc.   I have UNIX experience, 
 which does help some, but logging in with the OnDemand system confuses me a bit, to know when I'm truely logged out.  I worry that I 
 have mutliple sessions that are still running somewhere in the background on one of the servers.   Additionally I do not understand 
 the disk layout that I'm supposed to be using.  Is ~/courses/BINF6250* the same as /courses/BINF6250*?  I think it was indicated in
 class that I should be "working" in /courses/BINF6250*/.../caldwell.ja/... so I will do that.
+
 4. No prior knowledge of github.  The last source control system I've used didn't have a graphical user interface, and completely was run
 by terminal commands and shell scripts.  It also only allowed one user to refer to a file at a time, and forced a "checkout" of a 
 file in order to modify it.  Snapshots of an application system were done by taking version values for all of the source files in 
@@ -176,6 +180,7 @@ a product, and saving them, so that an entire snapshot could be retieved at a la
 whatever system was needed(I was porting these files to multiple different UNIX systemns (different vendors)).  Git is a different 
 beast, and I'm still struggling with the "concepts" behind it.  I understand that you create a branch off of the main branch and 
 start editing files as you go along, but it's still unclear to me 
+
 5. Teams:  My experience with Teams is interviews occasionally being done over Teams (they send me a link, I click on it).  Any other 
 functionality is unknown to be at this time.  It would be nice to know if I could share my desktop with my partner, but I don't know
 how to do this.  
