@@ -3,13 +3,39 @@ title: "project01"
 name(s):  Jacqueline Caldwell, Micheal Bambha
 class: BINF 6250; Fall, 2025
 output: 
+  html_document: default
+  pdf_document: default
   github_document:
     toc: true
     toc_depth: 2
     html_preview: false
  ---
-'''
-Initial Pseudo Code
+ 
+# Project 1
+This project works with the Variant Call Format (VCF) file format.  The data is from the clinial variant database from the NIH.
+This standardized format stores gene sequence variations in a plain text form.  The file used was clinvar_20190923_short.vcf.  
+It contains contains several allele frequencies from different databases.  The one to look for in this assignment is from ExAC 
+database (now the Genome Aggregation Database: gnomAD). 
+
+More specifically we are looking for the clinically relavant disease states that are listed for the AF_EXAC shows that the 
+expression is rare or in other words the Allele Frequency is low.  For this problem, we were asked to obtain the associated 
+clinical disease states, referred to in the file, found in the CLNDN key-value pair.  Separators for the CLNDN value list 
+are noted in the problem as the 'pipe' or 'vertical bar' character '|'.   I found that in addition to this separator, there 
+were some value lists that used a ',' (comma) as a separator.  Both were used in the below code/solution to the problem.
+Lastly, while we were not asked to do this, it seemed reasonable to me, to remove the duplicate clinical states (at least
+the ones with duplicate names) from the list, as this would be a reasonable list to hand to a customer.
+
+Please see below for the functions required by the problem:  read_file(), parse_file() and __main__ as required by the problem.
+In addition, I have added two helper functions, clean_my_list that strips strings that are not needed out of the list returned 
+at the end.  The second helper function is find_clinical_diseases which goes and gets string associated with the key-value pair 
+CLNDN and returns a python list of the clinical states found in the VCF file.
+
+"ExAC" or Exome Aggregation Consortium created a catalog of DNA sequence data for 60,000+ individuals, whose genetic variation has been evaluated by Lek(2015).  The "AF_EXAC" code noted above stands for Allele Frequency, ExAC is Exome Aggregation Consortium.  The 
+ExAC has become the Genome Aggregation Databse: gnomAD as noted above.
+
+
+# Initial Pseudo Code
+'''{pseduo code
 CLDN = ""
 
 def parse_line(str1)
@@ -46,21 +72,124 @@ def read_file(file_name_str):
       next_line = read_next_line(file_pointer) 
       
   close(file_pointer)
+}
 
+# Python Code
 ```{python}
-#!/usr/bin/env python
+
 from pprint import pprint
 
+def clean_my_list(mylist):
+  my_len = len(mylist)
+  new_list = list()
+  if (my_len == 0): return(mylist)
+  else:
+    for item in mylist:
+      if ((item==0) or (item=='not_specified') or (item=='not_provided')):
+        continue # don't add this item to the list
+      else:
+        new_list.append(item)
+    return(new_list)
 
-# Modify this function signature and fill in the details
-def parse_line():
 
-def read_file():
+def find_clinical_diseases(str1):
+  ind = str1.find("CLNDN")
+  if (ind!=-1):
+    value_list=str1.split(r';')
+    my_key = next((s for s in value_list if "CLNDN" in s), None)
+    value = my_key.split(r'=') # value = dict of CLNDN and "disease string"
+    disease_list = value[1].split(r'|') # take the resulting string, and split it by |
+    cleaned_list = clean_my_list(disease_list)
+    if (cleaned_list):
+      return(cleaned_list)
   
+  else: return()
 
 
+def parse_line(str1):
+  ind = str1.find("AF_EXAC")
+  if (ind!=-1):
+    value_list=str1.split(r';')
+    my_key = next((s for s in value_list if "AF_EXAC" in s), None)
+    value = my_key.split(r'=') # value = dict of AF_EXAC and floating point
+    if (float(value[1]) < 0.0001):
+      mydislist=find_clinical_diseases(str1)
+      if mydislist:
+        return(mydislist)
+  else:
+    return("") # no AF_EXAC in line
+
+
+
+def read_file(file_name_str):
+  disease_list=list() # initiallize 
+  with open(file_name_str,"r") as fp:
+    for line in fp:
+      if (line[0] == ""):
+        return (disease_list)
+      if (line[0] == "#"):
+        continue # ignore header lines in file
+      else:
+        temp_list = parse_line(line) # parse the line 
+        if temp_list:                 # if clinical disease states are returned, then...
+          if disease_list==0:
+            disease_list = temp_list # first line without # character at start; begin list
+          else:
+            for i_str in temp_list:
+              if i_str in disease_list: 
+                continue # remove the DUPLICATES
+              else:
+                disease_list.extend([i_str])
+               # disease_list.extend(temp_list) # add the new diseases found
+              continue
+        else:
+          continue
+  return(disease_list) #return created list
+  
 if __name__ == "__main__":
     pprint(read_file("clinvar_20190923_short.vcf"))
-
 ```
+
+
+# Successes
+Description of the team's learning points
+
+# Struggles
+Challenges faced with this project:
+  1. I have had limited use of strings in python and reading file use in my prior python class (we were encouraged to use data sets 
+  that used functions that were included by libraries already, or were similar to read file functions that would populate entire 
+  data frames in a single read function.  I have done parsing and reading of files in C, and know what I want to do, just not 
+  always the way to do it in python.   I found myself looking up a lot of stuff, but I expect this to get better over time. I do have
+  something done, but it's likely more C-like than python-like.  I will work with my teammate on this.
+  2. No/little knowledge of programming,debugging in IDE of RStudio or Visual Studio Code.  Prior python coding was done exclusively 
+  on google Colab.   Still working on this, but I have decided that I will be working with Visual Studio Code as an IDE, and somehow 
+  moving the code over to the RStudio program on NU cluster system.  Debugging error messages and codding on RStudio is awkward at best.
+  3. No prior knowledge of cluster programming, no prior use of submitting scripts to be run overnight, etc.   I have UNIX experience, 
+which does help some, but logging in with the OnDemand system confuses me a bit, to know when I'm truely logged out.  I worry that I 
+have mutliple sessions that are still running somewhere in the background on one of the servers.   Additionally I do not understand 
+the disk layout that I'm supposed to be using.  Is ~/courses/BINF6250* the same as /courses/BINF6250*?  I think it was indicated in
+class that I should be "working" in /courses/BINF6250*/.../caldwell.ja/... so I will do that.
+4. No prior knowledge of github.  The last source control system I've used didn't have a graphical user interface, and completely was run
+by terminal commands and shell scripts.  It also only allowed one user to refer to a file at a time, and forced a "checkout" of a 
+file in order to modify it.  Snapshots of an application system were done by taking version values for all of the source files in 
+a product, and saving them, so that an entire snapshot could be retieved at a later date, pulled out of the system and complied on 
+whatever system was needed(I was porting these files to multiple different UNIX systemns (different vendors)).  Git is a different 
+beast, and I'm still struggling with the "concepts" behind it.  I understand that you create a branch off of the main branch and 
+start editing files as you go along, but it's still unclear to me 
+5. Teams:  My experience with Teams is interviews occasionally being done over Teams (they send me a link, I click on it).  Any other 
+functionality is unknown to be at this time.  It would be nice to know if I could share my desktop with my partner, but I don't know
+how to do this.  
+
+# Personal Reflections
+## Group Leader
+Group leader's reflections on the project
+
+## Other members
+Other members' reflections on the project
+
+# Appendix
+## Journal Articles
+Lek, M., Karczewski, K., Minikel, E. et al. Analysis of protein-coding genetic variation in 60,706 humans. Nature 536, 285–291 (2016). https://doi.org/10.1038/nature19057
+## Generative AI Appendix
+
 

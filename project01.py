@@ -27,15 +27,15 @@ However, it seems to be "allele frequency" found as part of a project called "Ex
 catalog of DNA sequence data for 60,000+ individuals, whose gemetic variation has been evaluated by Lek(2015).
 
 Challenges faced with this project:
-1. I have had limited use of strings in python and reading file use in my prior python class (we were encouraged to use data sets 
-that used functions that were included by libraries already, or were similar to read file functions that would populate entire 
-data frames in a single read function.  I have done parsing and reading of files in C, and know what I want to do, just not 
-always the way to do it in python.   I found myself looking up a lot of stuff, but I expect this to get better over time. I do have
-something done, but it's likely more C-like than python-like.  I will work with my teammate on this.
-2. No/little knowledge of programming,debugging in IDE of RStudio or Visual Studio Code.  Prior python coding was done exclusively 
-on google Colab.   Still working on this, but I have decided that I will be working with Visual Studio Code as an IDE, and somehow 
-moving the code over to the RStudio program on NU cluster system.  Debugging error messages and codding on RStudio is awkward at best.
-3. No prior knowledge of cluster programming, no prior use of submitting scripts to be run overnight, etc.   I have UNIX experience, 
+  1. I have had limited use of strings in python and reading file use in my prior python class (we were encouraged to use data sets 
+  that used functions that were included by libraries already, or were similar to read file functions that would populate entire 
+  data frames in a single read function.  I have done parsing and reading of files in C, and know what I want to do, just not 
+  always the way to do it in python.   I found myself looking up a lot of stuff, but I expect this to get better over time. I do have
+  something done, but it's likely more C-like than python-like.  I will work with my teammate on this.
+  2. No/little knowledge of programming,debugging in IDE of RStudio or Visual Studio Code.  Prior python coding was done exclusively 
+  on google Colab.   Still working on this, but I have decided that I will be working with Visual Studio Code as an IDE, and somehow 
+  moving the code over to the RStudio program on NU cluster system.  Debugging error messages and codding on RStudio is awkward at best.
+  3. No prior knowledge of cluster programming, no prior use of submitting scripts to be run overnight, etc.   I have UNIX experience, 
 which does help some, but logging in with the OnDemand system confuses me a bit, to know when I'm truely logged out.  I worry that I 
 have mutliple sessions that are still running somewhere in the background on one of the servers.   Additionally I do not understand 
 the disk layout that I'm supposed to be using.  Is ~/courses/BINF6250* the same as /courses/BINF6250*?  I think it was indicated in
@@ -65,6 +65,8 @@ output/function returns: list of strings; that contain the clinical disease stat
 
 issues:  No specific concerns here, did error check for empty lists, or lists with empty strings included in their lists:
 '''
+from pprint import pprint
+
 def clean_my_list(mylist):
   my_len = len(mylist)
   new_list = list()
@@ -192,19 +194,9 @@ def read_file(file_name_str):
         else:
           continue
   return(disease_list) #return created list
-  
  
-file_name="clinvar_20190923_short.vcf"
-
-disease_list=list() # initialize the list
-
-disease_list=read_file(file_name)
-
-'''
-Output from this python script used for debugging and evaluation of code.
-'''
-count = len(disease_list)
-print(disease_list,count)
+if __name__ == "__main__":
+    pprint(read_file("clinvar_20190923_short.vcf"))
 
 '''
 Appendix/citations:
