@@ -1,0 +1,331 @@
+---
+title: "project01"
+name(s):  Jacqueline Caldwell, Micheal Bambha
+class: BINF 6250; Fall, 2025
+output: 
+  github_document:
+    toc: true
+    toc_depth: 2
+    html_preview: false
+---
+
+PSEUDO CODE
+
+CLDN = ""
+
+def parse_line(str1)
+# Note string sent will have \n at the end.
+  Look for "AF_EXAC" and get value afterwards.
+     if value is < 0.0001
+      if (ASSOCIATED_DISEASES !=) and (ASSOCIATED_DISEASES != 'not_specified') and (ASSOCIATED_DISEASES != 'not_provided')
+        return ASSOCIATED_DISEASES string
+      else
+        return ""
+
+def read_next_line(fp):
+  # fp = file pointer
+  # needs to return string with \n at end
+     index = seek(fp,1) # read next character in file line
+     while ( index != EOF ) and index is not '\n'
+        line_string = line_string + single index character
+        seek index forward one character
+        
+    # At this point first character should be the start of     
+     If index == EOF 
+          return ""   # I may be missing the last line.....
+     elif: character is "\n"
+          parse_string (line_string)
+     else:
+          add character to string
+          seek to next character.
+    return 
+
+def read_file(file_name_str):
+  file_pointer = open(file_name_str)
+  
+  while file_pointer not at EOF:
+      next_line = read_next_line(file_pointer) 
+      
+  close(file_pointer)
+  
+```{python}
+#!/usr/bin/env python
+from pprint import pprint
+
+'''
+Name:  Jacqueline Caldwell
+Class:  BIND6250/202609
+Homework:  Project 01
+Date Due:  9/17/2025
+
+This project works with the Variant Call Format (VCF) file format.  
+The data is from the clinial variant database from the NIH. This 
+standardized format stores gene sequence variations in a plain text form.  
+The file used was clinvar_20190923_short.vcf.   It contains contains several
+allele frequencies from different databases The one to look for in this 
+assignment is from ExAC database (now the Genome Aggregation Database: gnomAD). 
+
+More specifically we are looking for the clinically relavant disease states 
+that are listed for the AF_EXAC shows that the expression is rare or in 
+other words the Allele Frequency is low.  For this problem, we were 
+asked to obtain the associated clinical disease states, referred to in 
+the file, found in the CLNDN key-value pair.  Separators for the CLNDN value 
+list are noted in the problem as the 'pipe' or 'vertical bar' character '|'.   
+I found that in addition to this separator, there were some value lists 
+that used a ',' (comma) as a separator as well.  Both were used in the 
+below code/solution to the problem.
+
+Lastly, while we were not asked to do this, it seemed reasonable to me, to 
+remove the duplicate clinical states (at least the ones with duplicate names) 
+from the list, as this would be a reasonable list to hand to a customer.
+
+Please see below for the functions required by the problem:  read_file(), 
+parse_file() and __main__ as required by the problem.
+In addition, I have added two helper functions, clean_my_list that strips 
+strings that are not needed out of the list returned at the end.  The second
+helper function is find_clinical_diseases which goes and gets string associated 
+with the key-value pair CLNDN and returns a python list of the clinical states 
+found in the VCF file.
+
+On a side note:  the AF_EXAC denotation comes fromn "allele frequency" found as 
+part of a project called "ExAC" or Exome Aggregation Consortium that created a 
+catalog of DNA sequence data for 60,000+ individuals, whose gemetic variation has 
+been evaluated by Lek(2015).
+
+Challenges faced with this project:
+1. I have had limited use of strings in python and reading file use in prior 
+python class (we were encouraged to use data sets that used functions that were 
+included by libraries already, or were similar to read file functions that would 
+populate entire data frames in a single read function.  I have done parsing and 
+reading of files in C, and know what I want to do, just not always the way to 
+do it in python.   I found myself looking up a lot of stuff, but I expect this to 
+get better over time.
+2. No/little knowledge of programming,debugging in IDEs RStudio or Visual Studio 
+Code.  Prior python coding was done exclusively on google Colab.   Still working 
+on this, but I have decided that I will be working with Visual Studio Code as an 
+IDE, and somehow moving the code over to the RStudio program on NU cluster system.
+3. No prior knowledge of computer cluster use, no prior use of submitting scripts 
+to be run overnight, etc.   I have UNIX experience, which does help some, but
+logging in with the OnDemand system confuses me a bit, to know when I'm truely
+logged out.  I worry that I have mutliple sessions that are still running 
+somewhere in the background on one of the servers.   Additionally I do not 
+understand the disk layout that I'm supposed to be using.  Is ~/courses/BINF6250*
+the same as /courses/BINF6250*?  I think it was indicated in class that I should 
+be "working" in /courses/BINF6250*/.../caldwell.ja/... so I will do that.
+4. No prior knowledge of github.  The last source control system I've used didn't 
+have a user interface, and completely was run by terminal commands.  It also only 
+allowed one user to refer to a file at a time, and forced a "checkout" of a file 
+in order to modify it.  Snapshots of an application system were done by taking 
+version values for all of the source files in a product, and saving them, so that 
+an entire snapshot could be retieved at a later date, pulled out of the system and
+complied on whatever system was needed (I was porting these files to multiple 
+different UNIX systemns (different vendors)).  Git is a different beast, and I'm 
+still struggling with the "concepts" behind it.  I understand that you create a
+branch off of the main branch and start editing files as you go along, but I'm 
+still unsure.  I will be doing the the "get started guide from gitHub tomorrow 
+9/15/2025 and I hope that this will help with the issues I'm having.
+5. Teams:  My experience with Teams is interviews occasionally being done over 
+Teams (they send me a link, I click on it).  Any other functionality is 
+unknown to me at this time.  It would be nice to know if I could share my 
+desktop with my partner, but I don't know how to do this.  I was able to connect 
+with my partner via teams for chat (text and in-person)
+'''
+
+from re import re
+
+'''
+function:  clean_my_list; takes a list of clinical states, and strips out 
+'not_specified' and 'not_provided' strings
+
+input: list of clinical states from the most recent parse of a line from the 
+CLNDN key-value pair in our VCF file.
+
+internal variables used:  my_len -- size of list sent to the function.
+                          new_list -- list being created to return from this 
+                          function.
+                          item -- is also used as part of a for loop to cyle 
+                          through the mylist "list"
+
+output/function returns: list of strings; that contain the clinical disease 
+states found in the string given
+
+issues:  No specific concerns here, did error check for empty lists, or lists 
+with empty strings included in their lists.
+'''
+def clean_my_list(mylist):
+  my_len = len(mylist)
+  new_list = list()
+  if (my_len == 0): return(mylist)
+  else:
+    for item in mylist:
+      if ((item==0) or (item=='not_specified') or (item=='not_provided')):
+        continue # don't add this item to the list
+      else:
+        new_list.append(item)
+    return(new_list)
+
+'''
+function find_clinical_diseases; takes a STRING as input and returns a list of 
+strings as output.  This function takes the string, finds the key-value pair 
+associated with the CLNDN variable (this is a string).   This variable is then 
+split into a list of disease states based on the separator characters "," and 
+"|".  This is put into a new list of strings (disease_list); this list of 
+clinical disease states is then cleaned up by sending it to the function 
+clean_my_list() before being returned.
+
+input: str1:  string that contains the entire line from the VCF file being used 
+that contains the CLNDN key-value pair.
+
+local variables:  ind: -- index into the input string that is at the beginning of 
+                          the section marked "CLNDN"; identifies if this is in 
+                          the string given to the function.
+                  value_list: list of strings in the list that are separated by 
+                          the ';' separator.
+                  my_key: finds the key_value pair associated with CLNDN and 
+                          assigns to my_key (includes the CLNDN=<string>)
+                  value: splits out the value secion of the CLNDN key-value pair.
+                  disease_list: list created by taking local variable value 
+                          and splitting it using the characters '|' and ',' 
+                          (list of strings)
+                  cleaned_list: result of sending disease_list to clean_my_list 
+                                (gets rid of not_specified and not_provided); 
+                                this is the list of strings (clinical states )
+
+
+output/function returns: list of strings in the variable "cleaned_list" that 
+contains the clinical states from this line of the VCF file.
+
+issues/challenges:  1. Initially I was just using the | separator for the CLNDN 
+key-value string, however, I noted by looking at my output that there were a 
+couple of strings that were longer, and seemed to be using a ',' separator as
+well.  
+2. string.split behviour only uses a single character; I needed to be able to 
+split using two different characters, so I ended up importing the package re in 
+order to help me do this.
+'''
+
+def find_clinical_diseases(str1):
+  ind = str1.find("CLNDN")
+  if (ind!=-1):
+    value_list=str1.split(r';')
+    my_key = next((s for s in value_list if "CLNDN" in s), None)
+    value = my_key.split(r'=') # value = dict of CLNDN and "disease string"
+    disease_list = re.split(r"[|,]+",value[1]) # take the resulting string, and split it by , AND |
+    cleaned_list = clean_my_list(disease_list)
+    if (cleaned_list):
+      return(cleaned_list)
+  
+  else: return()
+
+'''
+function parse_line() ; takes a string (str1) as input (a full line from the
+VCF file) ; note that this will not be the header or comment lines as they are 
+not sent to this function.  It figures out if AF_EXAC is on this line and checks
+to see if the allele frequency is rare.   If it is, the function calls 
+"find_clinical diseases" and returns the list.
+
+input:  str1 - line of VCF file (one that is not the header or a comment line)
+
+output:  if str1 containes "AF_EXAC", the output (mydislist) which is a list of 
+strings - or list of clinical diseases is returned.
+
+local_variables: ind:  index into str1 at position of AF_EXAC.
+                 value_list:  strings contained in str1 that are separated by a ;
+                 my_key - look for AF_EXAC as a key-value pair in the value_list                          (this value contains the string AF_EXAC==<float>)
+                 value- grabs the value from the key-value pair "my_key"
+                        if the value is considered rare (value < 0.0001) ; then 
+                        find_clinical_diseases is sent the string str1
+                 mydislist: output list of strings (clinical diseases); AF_EXAC 
+                        is not in str1; null is returned from this function
+'''
+def parse_line(str1):
+  ind = str1.find("AF_EXAC")
+  if (ind!=-1):
+    value_list=str1.split(r';')
+    my_key = next((s for s in value_list if "AF_EXAC" in s), None)
+    value = my_key.split(r'=') # value = dict of AF_EXAC and floating point
+    if (float(value[1]) < 0.0001):
+      mydislist=find_clinical_diseases(str1)
+      if mydislist:
+        return(mydislist)
+  else:
+    return("") # no AF_EXAC in line
+
+
+'''
+function read_file(); takes a string (file_name_str) a filename as input, it 
+opens the file, and begins to read the file one line at a time.  If the line 
+has a # as the first character, it is ignored, and the next line is read.  
+This line is then parsed, and returned as a list of strings that contain 
+clinical disease states that are then appended to a growing list; this append
+only happens if the newly identified list contains clinical values that are not 
+already in the list. 
+
+input: file_name_str:  filename in the form of string 
+
+output: disease_list: list of strings that contains the unique clinical disease 
+states, without null values, or the strings not_provided or not_specified
+
+local_variables: disease_list:  list that starts as null list, and it cons'd 
+                    up as you go.  Unique values only are put into this list.
+                 fp: file pointer for the list openned by python with 
+                    file_name_str; open automatically closes this file when the 
+                    with statement completes
+                 line: single line read in from the open file
+                 temp_list: keeps a temporary list of strings (clinical disease 
+                    states) returned from parse_line.
+                 i_str: value obtained from temp_list via for loop
+
+challenges/issues:  apparently casting a string to a list creates a list of 
+characters (known and documented behavior, but that seemed a little odd to me; 
+apparently the way to do this correctly is to surround the string with braces.  
+This took a while to figure out.
+'''
+def read_file(file_name_str):
+  disease_list=list() # initiallize 
+  with open(file_name_str,"r") as fp:
+    for line in fp:
+      if (line[0] == ""):
+        return (disease_list)
+      if (line[0] == "#"):
+        continue # ignore header lines in file
+      else:
+        temp_list = parse_line(line) # parse the line 
+        if temp_list:                 # if clinical disease states are returned, then...
+          if disease_list==0:
+            disease_list = temp_list # first line without # character at start; begin list
+          else:
+            for i_str in temp_list:
+              if i_str in disease_list: 
+                continue # remove the DUPLICATES
+              else:
+                disease_list.extend([i_str])
+               # disease_list.extend(temp_list) # add the new diseases found
+              continue
+        else:
+          continue
+  return(disease_list) #return created list
+  
+ 
+file_name="clinvar_20190923_short.vcf"
+
+disease_list=list() # initialize the list
+
+disease_list=read_file(file_name)
+
+'''
+Output from this python script used for debugging and evaluation of code.
+'''
+#count = len(disease_list)
+#print(disease_list,count)
+
+if __name__ == "__main__":
+    pprint(read_file("clinvar_20190923_short.vcf"))
+    
+'''
+Appendix/citations:
+
+Lek, M., Karczewski, K., Minikel, E. et al. Analysis of protein-coding genetic variation in 60,706 humans. Nature 536, 285–291 (2016). https://doi.org/10.1038/nature19057
+'''
+
+
