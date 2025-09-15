@@ -7,37 +7,9 @@ output:
     toc: true
     toc_depth: 2
     html_preview: false
- 
-  
-The problem:
-    Within the program:
-      1. Write a function called parse_line that:
-        a. Takes a string as an argument
-        b. Extract the AF_EXAC data to determine the rarity of the variant
-          i. If AF_EXAC is not present, skip the line
-          ii.  If the variant is rare (value for the AF_EXAC key < 0.0001)
-             return a list of associated diseases in CLNDN
-               Do not count the diseases that are:
-                    not_specified
-                    not_provided
-         iii. If the variant is not rare:
-             return an empty list
-    2.  Write another function called read_file that:
-      a. Takes a string as an argument representing the file to be opened
-      b. Open the file
-      c. Read the file line by line.
-         Note: You are expected to do this one line at a time. The reasoning is that 
-         if the file is sufficiently large, you may not have the memory available to hold it. 
-         So, do not use readlines()!
-      d. Passes the line to parse_line
-      e. Use a dictionary to count the results given by parse_line to keep a 
-      running tally (or count) of the number of times a specific disease is observed
-      f. return that dictionary
-    4. print the results from read_file when it is complete
-    
-
-PSEUDO CODE
-
+ ---
+'''
+Initial Pseudo Code
 CLDN = ""
 
 def parse_line(str1)
@@ -74,9 +46,6 @@ def read_file(file_name_str):
       next_line = read_next_line(file_pointer) 
       
   close(file_pointer)
-  
-  
----
 
 ```{python}
 #!/usr/bin/env python
