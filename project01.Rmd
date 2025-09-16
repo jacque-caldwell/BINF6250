@@ -1,7 +1,7 @@
 ---
 title: "project01"
 name(s):  Jacqueline Caldwell, Micheal Bambha
-class: BINF 6250; Fall, 2025
+class: BINF 6250; Fall 2025
 output: 
   html_document: default
   pdf_document: default
@@ -10,29 +10,60 @@ output:
     toc_depth: 2
     html_preview: false
  ---
- 
-# Project 1
-This project works with the Variant Call Format (VCF) file format.  The data is from the clinial variant database from the NIH.
-This standardized format stores gene sequence variations in a plain text form.  The file used was clinvar_20190923_short.vcf.  
-It contains contains several allele frequencies from different databases.  The one to look for in this assignment is from ExAC 
-database (now the Genome Aggregation Database: gnomAD). 
 
-More specifically we are looking for the clinically relavant disease states that are listed for the AF_EXAC shows that the 
-expression is rare or in other words the Allele Frequency is low.  For this problem, we were asked to obtain the associated 
-clinical disease states, referred to in the file, found in the CLNDN key-value pair.  Separators for the CLNDN value list 
-are noted in the problem as the 'pipe' or 'vertical bar' character '|'.   I found that in addition to this separator, there 
-were some value lists that used a ',' (comma) as a separator.  Both were used in the below code/solution to the problem.
-Lastly, while we were not asked to do this, it seemed reasonable to me, to remove the duplicate clinical states (at least
-the ones with duplicate names) from the list, as this would be a reasonable list to hand to a customer.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("reticulate")
+use_python("/usr/bin/python3")
+```
 
-Please see below for the functions required by the problem:  read_file(), parse_file() and __main__ as required by the problem.
-In addition, I have added two helper functions, clean_my_list that strips strings that are not needed out of the list returned 
-at the end.  The second helper function is find_clinical_diseases which goes and gets string associated with the key-value pair 
-CLNDN and returns a python list of the clinical states found in the VCF file.
+```{python Load Libraries}
+from typing import List, Optional
+from collections import Counter
+from pprint import pprint
+```
+# Project 1 functional parsing Variant Call Format (VCF) file
 
-"ExAC" or Exome Aggregation Consortium created a catalog of DNA sequence data for 60,000+ individuals, whose genetic variation has been evaluated by Lek(2015).  The "AF_EXAC" code noted above stands for Allele Frequency, ExAC is Exome Aggregation Consortium.  The 
-ExAC has become the Genome Aggregation Databse: gnomAD as noted above.
+##Problem statement
+This project works with the Variant Call Format (VCF) file format.  
+The data is from the clinial variant database from the NIH. This 
+standardized format stores gene sequence variations in a plain text form.  
+The datafile used was clinvar_20190923_short.vcf.  It contains contains 
+several allele frequencies from different databases.  The one to look for 
+in this assignment is from ExAC database (now the Genome Aggregation 
+Database: gnomAD). 
 
+More specifically we are looking for the clinically relavant disease 
+states that are listed for the AF_EXAC shows that the expression is 
+rare or in other words the Allele Frequency is low.  For this problem, 
+we were asked to obtain the associated clinical disease states, referred 
+to in the file, found in the CLNDN key-value pair.  Separators for the 
+CLNDN value list are noted in the problem as the 'pipe' or 'vertical 
+bar' character '|'.   We found that in addition to this separator, there 
+were some value lists that used a ',' (comma) as a separator, but 
+determined that the commas were part of the "disease".  Lastly, while 
+we were not asked to do this, it seemed reasonable to me, to remove the 
+duplicate clinical states (at least the ones with duplicate names) from 
+the list, as this would be a reasonable list to hand to a customer. 
+(Sherman, 2025)
+
+### Note
+"ExAC" or Exome Aggregation Consortium created a catalog of DNA sequence 
+data for 60,000+ individuals, whose genetic variation has been evaluated 
+by Lek(2015).  The "AF_EXAC" code noted above stands for Allele Frequency, 
+ExAC is Exome Aggregation Consortium.  The ExAC has become the Genome 
+Aggregation Databse: gnomAD as noted above.
+
+## Problem Solution
+The purpose of this file is to find rare alleles with the key `AF_EXAC`
+in a clinvar VCF file, identify diseases associated with these rare alleles,
+and then tally the total number of diseases found throughout the VCF.
+
+We have implemented three functions (one helper) to accomplish this. We read
+the file line by line, parse the last column of the file into a dictionary,
+find the `AF_EXAC` key, and return the list of diseases. Then, using
+`Counter` from the `collections` library, we can update the `Counter` object
+every line to count the diseases.
 
 # Initial Pseudo Code
 ```{ }
@@ -42,7 +73,8 @@ def parse_line(str1)
 # Note string sent will have \n at the end.
   Look for "AF_EXAC" and get value afterwards.
      if value is < 0.0001
-      if (ASSOCIATED_DISEASES !=) and (ASSOCIATED_DISEASES != 'not_specified') and (ASSOCIATED_DISEASES != 'not_provided')
+      if (ASSOCIATED_DISEASES !=) and (ASSOCIATED_DISEASES != 'not_specified') 
+          and (ASSOCIATED_DISEASES != 'not_provided')
         return ASSOCIATED_DISEASES string
       else
         return ""
@@ -75,126 +107,219 @@ def read_file(file_name_str):
 ```
 
 # Python Code
-```{python}
+## parse_line function
+The last column of a VCF file is structured as key-value pairs denoted with
+"=", and the pairs are separated by ";". As VCF files are tab-delimited,
+we can grab the last column with `.split("\t")[7]`. You could also index it
+with `[-1]` but since VCF format is always supposed to have 8 columns, 
+we chose to be explicit in grabbing with `[7]` as we can also use this as a
+check in case one of the lines is formatted wrong for whatever reason.
 
-from pprint import pprint
+Next, we grab the key-value pairs by splitting on `";"`, and we can add
+some functionality with `filter(None)` which will get rid of any empty
+strings. Now that we have a list of strings in format `"key=value"`, using
+`split("=", 1)` will split this into another list. The `1` positional argument
+refers to the number of times we split. Since we are iterating by item
+in the list, we expect there to be only one `=`, so this is just a way to ensure
+that unexpected `=` won't break our function.
 
-def clean_my_list(mylist):
-  my_len = len(mylist)
-  new_list = list()
-  if (my_len == 0): return(mylist)
-  else:
-    for item in mylist:
-      if ((item==0) or (item=='not_specified') or (item=='not_provided')):
-        continue # don't add this item to the list
-      else:
-        new_list.append(item)
-    return(new_list)
+Lastly, we will get the value using `.get()` as it will return None if
+the key doesn't exist. Since we don't expect `AF_EXAC` to be in the line
+every time, this is a much better solution than doing `attrs[key] = value` since
+that will raise an error if the key doesn't exist.
 
+Since the value of `AF_EXAC` is a string, we have to cast it to `float` before
+evaluating the allele frequency. 
 
-def find_clinical_diseases(str1):
-  ind = str1.find("CLNDN")
-  if (ind!=-1):
-    value_list=str1.split(r';')
-    my_key = next((s for s in value_list if "CLNDN" in s), None)
-    value = my_key.split(r'=') # value = dict of CLNDN and "disease string"
-    disease_list = value[1].split(r'|') # take the resulting string, and split it by |
-    cleaned_list = clean_my_list(disease_list)
-    if (cleaned_list):
-      return(cleaned_list)
-  
-  else: return()
+```{python parse_line}
+def parse_line(vcf_string: str) -> Optional[List[str]]:
+    """Parse a line of a VCF file for the allele
+    frequency AF_EXAC and return a list of diseases
+    for that entry if the allele frequency is
+    < 0.0001. Returns None if AF_EXAC is not found
+    in the line, or if the allele frequency >
+    0.0001.
 
+    Args:
+        vcf_string (str): A non-metadata line of a VCF
+        file (tab-delimited). Example:
 
-def parse_line(str1):
-  ind = str1.find("AF_EXAC")
-  if (ind!=-1):
-    value_list=str1.split(r';')
-    my_key = next((s for s in value_list if "AF_EXAC" in s), None)
-    value = my_key.split(r'=') # value = dict of AF_EXAC and floating point
-    if (float(value[1]) < 0.0001):
-      mydislist=find_clinical_diseases(str1)
-      if mydislist:
-        return(mydislist)
-  else:
-    return("") # no AF_EXAC in line
+        1	1014451	475281	C	T	.	.	AF_EXAC=0.0077226;CLNDN=Immunodeficiency_38_with_basal_ganglia_calcification
 
+    Returns:
+        Optional[List[str]]: List of diseases found or None if nothing was found.
+    """
+    attrs = {}
 
+    try:
+        info = vcf_string.split("\t")[7]
+    except IndexError:  # in case the line is incorrectly formatted, we return an empty list
+        return []
 
-def read_file(file_name_str):
-  disease_list=list() # initiallize 
-  with open(file_name_str,"r") as fp:
-    for line in fp:
-      if (line[0] == ""):
-        return (disease_list)
-      if (line[0] == "#"):
-        continue # ignore header lines in file
-      else:
-        temp_list = parse_line(line) # parse the line 
-        if temp_list:                 # if clinical disease states are returned, then...
-          if disease_list==0:
-            disease_list = temp_list # first line without # character at start; begin list
-          else:
-            for i_str in temp_list:
-              if i_str in disease_list: 
-                continue # remove the DUPLICATES
-              else:
-                disease_list.extend([i_str])
-               # disease_list.extend(temp_list) # add the new diseases found
-              continue
-        else:
-          continue
-  return(disease_list) #return created list
-  
+    for part in filter(
+        None, info.strip().split(";")
+    ):  # if .strip().split() returns "", filter will remove from list
+        if "=" in part:
+            k, v = part.split("=", 1)
+            attrs[k.strip()] = v.strip()
+
+    allele_freq = attrs.get("AF_EXAC")
+
+    if allele_freq is None:
+        return []
+
+    if float(allele_freq) <= 0.0001:
+        return _filter_CLNDN(attrs["CLNDN"])
+
+    return []
+```
+
+## _filter_CLNDN helper function
+
+We added an additional helper function to filter out the CLNDN key
+if the disease was `not_specified` or `not_provided`. Diseases are separated
+by `"|"` so we just use `.split("|")` to return a list of all of the diseases. 
+
+```{python _filter_CLNDN helper}
+def _filter_CLNDN(clndn_str: str) -> Optional[List[str]]:
+    """Take in the value of CLNDN parsed out of a VCF file
+    and return a list of diseases.
+
+    Args:
+        clndn_str (str): The value of the CLNDN parsed from
+        key/value hierarchy of VCF formatted files. Contains
+        a string of diseases separated by "|".
+        Example: Myasthenic_syndrome|Breast_cancer
+
+    Returns:
+        Optional[List[str]]: List of diseases parsed by the "|".
+        Diseases that are "not_specified" or "not_provided" are
+        not returned.
+    """
+    strings_to_filter = ["not_specified", "not_provided"]
+    clndn_str_filtered = clndn_str.split("|")
+    return [
+        disease for disease in clndn_str_filtered if disease not in strings_to_filter
+    ]
+```
+
+## read_file
+
+Lastly, to bring everything together, a simple solution to count the diseases
+is the `Counter` object. Calling `Counter` on a list gives us essentially
+a dictionary of the counts with added functionality. Calling `.update()` on
+each new list will update the counts. 
+
+```{python read_file}
+def read_file(file_name: str) -> Optional[Counter[str]]:
+    """Read in a VCF file and return a dictionary of
+    diseases counts found to be associated with allele
+    frequencies of >0.0001. Counts represent the number
+    that each associated disease was found across
+    all variants.
+
+    Args:
+        file_name (str): VCF file to read
+
+    Returns:
+        Optional[dict]: Dictionary of disease counts
+        from all variants. Example:
+        {"Breast_cancer": 20, ...}
+        Will return None if no diseases are found for
+        variants of frequency < 0.0001.
+    """
+
+    disease_count = Counter()
+    with open(file_name, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            diseases = parse_line(line)
+            if diseases:
+                disease_count.update(diseases)
+
+    return disease_count
+```
+
+```{python Run Main}
 if __name__ == "__main__":
     pprint(read_file("clinvar_20190923_short.vcf"))
 ```
 
-
-# Successes
-Description of the team's learning points
+# Successes/Learning Points
+* Getting a file open and reading in the text line by line.
+* Confirming both python and Rmd coding environments are up and running.
+* Source control situation (github) established
+* Ability to work with another student in class, even in another time zone!
+* Confirmed solution with alternate solution.
 
 # Struggles
 Challenges faced with this project:
 
-  1. I have had limited use of strings in python and reading file use in my prior python class (we were encouraged to use data sets 
-  that used functions that were included by libraries already, or were similar to read file functions that would populate entire 
-  data frames in a single read function.  I have done parsing and reading of files in C, and know what I want to do, just not 
-  always the way to do it in python.   I found myself looking up a lot of stuff, but I expect this to get better over time. I do have
-  something done, but it's likely more C-like than python-like.  I will work with my teammate on this.
+  1. Jacque: had not used strings in Python much and reading 
+  files in my prior class--we were encouraged to use data sets 
+  that used functions that were included by libraries already.  
+  I found myself looking up a lot of stuff, but I expect this to 
+  get better over time. 
   
-  2. No/little knowledge of programming,debugging in IDE of RStudio or Visual Studio Code.  Prior python coding was done exclusively 
-  on google Colab.   Still working on this, but I have decided that I will be working with Visual Studio Code as an IDE, and somehow 
-  moving the code over to the RStudio program on NU cluster system.  Debugging error messages and codding on RStudio is awkward at best.
+  2. Jacque: No/little knowledge of editting or debugging in 
+  RStudio or Visual Studio Code.  Prior python coding was done 
+  exclusively on Google Colab.   Still working on this, but 
+  I have decided that I will be working with Visual Studio Code 
+  as an IDE, then importing the python code into an Rmd file that 
+  will be formated by RStudio.  Debugging and coding Python on 
+  RStudio is awkward at best.
   
-  3. No prior knowledge of cluster programming, no prior use of submitting scripts to be run overnight, etc.   I have UNIX experience, 
-which does help some, but logging in with the OnDemand system confuses me a bit, to know when I'm truely logged out.  I worry that I 
-have mutliple sessions that are still running somewhere in the background on one of the servers.   Additionally I do not understand 
-the disk layout that I'm supposed to be using.  Is ~/courses/BINF6250* the same as /courses/BINF6250*?  I think it was indicated in
-class that I should be "working" in /courses/BINF6250*/.../caldwell.ja/... so I will do that.
+  3. Jacque: No prior knowledge of cluster programming, no 
+  prior use of submitting scripts to be run overnight, etc.   I 
+  have UNIX experience, which does help some, but logging 
+  in with the OnDemand system confuses me a bit, to know when I'm 
+  truly logged out.  I worry that I have mutliple sessions that 
+  are still running somewhere in the background on one of the 
+  servers.   Additionally I do not understand the disk layout that 
+  I'm supposed to be using.  Is tilde/courses/BINF6250* the same 
+  as /courses/BINF6250*?  It was indicated in class that I should 
+  be "working" in /courses/BINF6250*/.../caldwell.ja/... so I will 
+  do that.
 
-4. No prior knowledge of github.  The last source control system I've used didn't have a graphical user interface, and completely was run
-by terminal commands and shell scripts.  It also only allowed one user to refer to a file at a time, and forced a "checkout" of a 
-file in order to modify it.  Snapshots of an application system were done by taking version values for all of the source files in 
-a product, and saving them, so that an entire snapshot could be retieved at a later date, pulled out of the system and complied on 
-whatever system was needed(I was porting these files to multiple different UNIX systemns (different vendors)).  Git is a different 
-beast, and I'm still struggling with the "concepts" behind it.  I understand that you create a branch off of the main branch and 
-start editing files as you go along, but it's still unclear to me 
+  4. Jacque: No prior knowledge of github.  The last source control 
+  system I've used didn't have a graphical user interface, and was 
+  run by terminal commands and Bourne shell scripts.  It allowed 
+  one user to edit a file at a time, and forced a "checkout" of a 
+  file in order to modify it.  Snapshots of an application system 
+  were done by taking version values for all of the source files in
+  a product, and saving them, so that an entire snapshot could be 
+  retieved at a later date.  Git is a different beast, and I'm still 
+  struggling with the "concepts" behind it.  It's a process.
 
-5. Teams:  My experience with Teams is interviews occasionally being done over Teams (they send me a link, I click on it).  Any other 
-functionality is unknown to be at this time.  It would be nice to know if I could share my desktop with my partner, but I don't know
-how to do this.  
-
+  5. Jacque:Teams:  My experience with Teams is only from interviews 
+  and occasional meetings being done over Teams (they send me a link, 
+  I click on it).  Can desktops be shared?  Individual windows?
+  
+  6. Jacque: No prior knowledge of RMD; though I have used something 
+  similar in the very distant past.  I now have the R markdown cheat 
+  sheet in my favorites.  Additionally I have formated code from my 
+  partner that helps with making the <code> and <comment> sections 
+  separate.
+  
 # Personal Reflections
 ## Group Leader
-Group leader's reflections on the project
+This is a great first problem to make sure that we have our 
+programming environments set up, including the github repositories.
+Coding problem simple enough to do individually and assess different
+coding styles, and confirm solution by a different means.  I personally 
+feel that we worked well together, and the project is complete.
 
 ## Other members
 Other members' reflections on the project
 
 # Appendix
-## Journal Articles
+## Journal Articles/Web Rerences
+
+Sherman, M:  BINF6250, Problem 01 Problem Description, Fall 2025
+
 Lek, M., Karczewski, K., Minikel, E. et al. Analysis of protein-coding genetic variation in 60,706 humans. Nature 536, 285–291 (2016). https://doi.org/10.1038/nature19057
+
 ## Generative AI Appendix
 
 
