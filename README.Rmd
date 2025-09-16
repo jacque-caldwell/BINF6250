@@ -1,13 +1,202 @@
 ---
-title: "project01/README"
-names:  Jacqueline Caldwell, Micheal Bambha
-output: html_document
+title: "project01"
+name(s):  Jacqueline Caldwell, Micheal Bambha
+class: BINF 6250; Fall, 2025
+output: 
+  html_document: default
+  pdf_document: default
+  github_document:
+    toc: true
+    toc_depth: 2
+    html_preview: false
 ---
 
-# Introduction
-Project One:
-Read in clinvar.vcf file; to identify AF_EXAC (allele frequencies) showing
-rarity of the variant ; and create a list of associated clinical disease 
-variants.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+library('reticulate')
+use_python('/usr/bin/python3')
+```
 
-See project01.Rmd for more information, coding/testing was done with project01.py.
+# Functional parsing Variant Call Format (VCF) file
+
+Jacqueline Caldwell, Micheal Bambha
+
+BINF 6250; Fall, 2025
+
+README.Rmd
+
+Please see Project01.Rmd for python code and comments.
+
+## Problem statement
+This project works with the Variant Call Format (VCF) file format.  
+The data is from the clinial variant database from the NIH. This 
+standardized format stores gene sequence variations in a plain text form.  
+The datafile used was clinvar_20190923_short.vcf.  It contains contains 
+several allele frequencies from different databases.  The one to look for 
+in this assignment is from ExAC database (now the Genome Aggregation 
+Database: gnomAD). 
+
+More specifically we are looking for the clinically relavant disease 
+states that are listed for the AF_EXAC shows that the expression is 
+rare or in other words the Allele Frequency is low.  For this problem, 
+we were asked to obtain the associated clinical disease states, referred 
+to in the file, found in the CLNDN key-value pair.  Separators for the 
+CLNDN value list are noted in the problem as the 'pipe' or 'vertical 
+bar' character '|'.   We found that in addition to this separator, there 
+were some value lists that used a ',' (comma) as a separator, but 
+determined that the commas were part of the "disease".  Lastly, while 
+we were not asked to do this, it seemed reasonable to me, to remove the 
+duplicate clinical states (at least the ones with duplicate names) from 
+the list, as this would be a reasonable list to hand to a customer. 
+(Sherman, 2025)
+
+### Note
+"ExAC" or Exome Aggregation Consortium created a catalog of DNA sequence 
+data for 60,000+ individuals, whose genetic variation has been evaluated 
+by Lek(2015).  The "AF_EXAC" code noted above stands for Allele Frequency, 
+ExAC is Exome Aggregation Consortium.  The ExAC has become the Genome 
+Aggregation Databse: gnomAD as noted above.
+
+## Problem Solution
+The purpose of this file is to find rare alleles with the key `AF_EXAC`
+in a clinvar VCF file, identify diseases associated with these rare alleles,
+and then tally the total number of diseases found throughout the VCF.
+
+We have implemented three functions (one helper) to accomplish this. We read
+the file line by line, parse the last column of the file into a dictionary,
+find the `AF_EXAC` key, and return the list of diseases. Then, using
+`Counter` from the `collections` library, we can update the `Counter` object
+every line to count the diseases.
+
+# Initial Pseudo Code
+```{ }
+CLDN = ""
+
+def parse_line(str1)
+# Note string sent will have \n at the end.
+  Look for "AF_EXAC" and get value afterwards.
+     if value is < 0.0001
+      if (ASSOCIATED_DISEASES !=) and (ASSOCIATED_DISEASES != 'not_specified') 
+          and (ASSOCIATED_DISEASES != 'not_provided')
+        return ASSOCIATED_DISEASES string
+      else
+        return ""
+
+def read_next_line(fp):
+  # fp = file pointer
+  # needs to return string with \n at end
+     index = seek(fp,1) # read next character in file line
+     while ( index != EOF ) and index is not '\n'
+        line_string = line_string + single index character
+        seek index forward one character
+        
+    # At this point first character should be the start of     
+     If index == EOF 
+          return ""   # I may be missing the last line.....
+     elif: character is "\n"
+          parse_string (line_string)
+     else:
+          add character to string
+          seek to next character.
+    return 
+
+def read_file(file_name_str):
+  file_pointer = open(file_name_str)
+  
+  while file_pointer not at EOF:
+      next_line = read_next_line(file_pointer) 
+      
+  close(file_pointer)
+```
+
+
+# Python Code
+Please see project01.Rmd file in this directory.
+
+# Successes/Learning Points
+* Getting a file open and reading in the text line by line.
+* Confirming both python and Rmd coding environments are up and running.
+* Source control situation (github) established
+* Ability to work with another student in class, even in another time zone!
+* Confirmed solution with alternate solution.
+* Micheal: I'm pretty happy with the usage of `Counter` here since it was 
+extremely straightforward to implement!
+
+# Struggles
+Challenges faced with this project:
+
+  1. Jacque: had not used strings in Python much and reading 
+  files in my prior class--we were encouraged to use data sets 
+  that used functions that were included by libraries already.  
+  I found myself looking up a lot of stuff, but I expect this to 
+  get better over time. 
+  
+  2. Jacque: No/little knowledge of editting or debugging in 
+  RStudio or Visual Studio Code.  Prior python coding was done 
+  exclusively on Google Colab.   Still working on this, but 
+  I have decided that I will be working with Visual Studio Code 
+  as an IDE, then importing the python code into an Rmd file that 
+  will be formated by RStudio.  Debugging and coding Python on 
+  RStudio is awkward at best.
+  
+  3. Jacque: No prior knowledge of cluster programming, no 
+  prior use of submitting scripts to be run overnight, etc.   I 
+  have UNIX experience, which does help some, but logging 
+  in with the OnDemand system confuses me a bit, to know when I'm 
+  truly logged out.  I worry that I have mutliple sessions that 
+  are still running somewhere in the background on one of the 
+  servers.   Additionally I do not understand the disk layout that 
+  I'm supposed to be using.  Is tilde/courses/BINF6250* the same 
+  as /courses/BINF6250*?  It was indicated in class that I should 
+  be "working" in /courses/BINF6250*/.../caldwell.ja/... so I will 
+  do that.
+
+  4. Jacque: No prior knowledge of github.  The last source control 
+  system I've used didn't have a graphical user interface, and was 
+  run by terminal commands and Bourne shell scripts.  It allowed 
+  one user to edit a file at a time, and forced a "checkout" of a 
+  file in order to modify it.  Snapshots of an application system 
+  were done by taking version values for all of the source files in
+  a product, and saving them, so that an entire snapshot could be 
+  retieved at a later date.  Git is a different beast, and I'm still 
+  struggling with the "concepts" behind it.  It's a process.
+
+  5. Jacque:Teams:  My experience with Teams is only from interviews 
+  and occasional meetings being done over Teams (they send me a link, 
+  I click on it).  Can desktops be shared?  Individual windows?
+  
+  6. Jacque: No prior knowledge of RMD; though I have used something 
+  similar in the very distant past.  I now have the R markdown cheat 
+  sheet in my favorites.  Additionally I have formated code from my 
+  partner that helps with making the <code> and <comment> sections 
+  separate.
+  
+  7. Micheal: My main challenge was with a typo in my tab splitting, where
+  I used `.split(/t)` instead of `.split(\t`) which ended up returning
+  nothing, since using a forward slash searches for the literal '/t' and not
+  a tab character.
+  
+# Personal Reflections
+## Group Leader
+This is a great first problem set to make sure that we have our 
+programming environments set up, including the github repositories.
+Coding problem simple enough to do individually and assess different
+coding styles, and confirm solution by a different means.  I personally 
+feel that we worked well together, and the project is complete.
+
+## Other members
+For the most part, this was pretty straightforward.  There were a couple of 
+small tweaks I had to make, like using `.get()` instead of directly indexing
+the dictionary to prevent `KeyError` and also ensuring that the disease list
+was not empty before passing it to `Counter`.
+
+# Appendix
+## Journal Articles/Web Rerences
+
+Sherman, M:  BINF6250, Problem 01 Problem Description, Fall 2025
+
+Lek, M., Karczewski, K., Minikel, E. et al. Analysis of protein-coding genetic variation in 60,706 humans. Nature 536, 285–291 (2016). https://doi.org/10.1038/nature19057
+
+## Generative AI Appendix
+
+

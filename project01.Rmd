@@ -18,45 +18,15 @@ use_python("/usr/bin/python3")
 ```
 
 ```{python Load Libraries}
-from typing import List, Optional
+from typing import List
 from collections import Counter
 from pprint import pprint
 ```
-# Project 1 functional parsing Variant Call Format (VCF) file
 
-##Problem statement
-This project works with the Variant Call Format (VCF) file format.  
-The data is from the clinial variant database from the NIH. This 
-standardized format stores gene sequence variations in a plain text form.  
-The datafile used was clinvar_20190923_short.vcf.  It contains contains 
-several allele frequencies from different databases.  The one to look for 
-in this assignment is from ExAC database (now the Genome Aggregation 
-Database: gnomAD). 
+# Project 01: VCF File Parsing
 
-More specifically we are looking for the clinically relavant disease 
-states that are listed for the AF_EXAC shows that the expression is 
-rare or in other words the Allele Frequency is low.  For this problem, 
-we were asked to obtain the associated clinical disease states, referred 
-to in the file, found in the CLNDN key-value pair.  Separators for the 
-CLNDN value list are noted in the problem as the 'pipe' or 'vertical 
-bar' character '|'.   We found that in addition to this separator, there 
-were some value lists that used a ',' (comma) as a separator, but 
-determined that the commas were part of the "disease".  Lastly, while 
-we were not asked to do this, it seemed reasonable to me, to remove the 
-duplicate clinical states (at least the ones with duplicate names) from 
-the list, as this would be a reasonable list to hand to a customer. 
-(Sherman, 2025)
-
-### Note
-"ExAC" or Exome Aggregation Consortium created a catalog of DNA sequence 
-data for 60,000+ individuals, whose genetic variation has been evaluated 
-by Lek(2015).  The "AF_EXAC" code noted above stands for Allele Frequency, 
-ExAC is Exome Aggregation Consortium.  The ExAC has become the Genome 
-Aggregation Databse: gnomAD as noted above.
-
-## Problem Solution
 The purpose of this file is to find rare alleles with the key `AF_EXAC`
-in a clinvar VCF file, identify diseases associated with these rare alleles,
+in a ClinVar VCF file, identify diseases associated with these rare alleles,
 and then tally the total number of diseases found throughout the VCF.
 
 We have implemented three functions (one helper) to accomplish this. We read
@@ -65,54 +35,13 @@ find the `AF_EXAC` key, and return the list of diseases. Then, using
 `Counter` from the `collections` library, we can update the `Counter` object
 every line to count the diseases.
 
-# Initial Pseudo Code
-```{ }
-CLDN = ""
+## parse_line
 
-def parse_line(str1)
-# Note string sent will have \n at the end.
-  Look for "AF_EXAC" and get value afterwards.
-     if value is < 0.0001
-      if (ASSOCIATED_DISEASES !=) and (ASSOCIATED_DISEASES != 'not_specified') 
-          and (ASSOCIATED_DISEASES != 'not_provided')
-        return ASSOCIATED_DISEASES string
-      else
-        return ""
-
-def read_next_line(fp):
-  # fp = file pointer
-  # needs to return string with \n at end
-     index = seek(fp,1) # read next character in file line
-     while ( index != EOF ) and index is not '\n'
-        line_string = line_string + single index character
-        seek index forward one character
-        
-    # At this point first character should be the start of     
-     If index == EOF 
-          return ""   # I may be missing the last line.....
-     elif: character is "\n"
-          parse_string (line_string)
-     else:
-          add character to string
-          seek to next character.
-    return 
-
-def read_file(file_name_str):
-  file_pointer = open(file_name_str)
-  
-  while file_pointer not at EOF:
-      next_line = read_next_line(file_pointer) 
-      
-  close(file_pointer)
-```
-
-# Python Code
-## parse_line function
 The last column of a VCF file is structured as key-value pairs denoted with
 "=", and the pairs are separated by ";". As VCF files are tab-delimited,
 we can grab the last column with `.split("\t")[7]`. You could also index it
 with `[-1]` but since VCF format is always supposed to have 8 columns, 
-we chose to be explicit in grabbing with `[7]` as we can also use this as a
+I chose to be explicit in grabbing with `[7]` as we can also use this as a
 check in case one of the lines is formatted wrong for whatever reason.
 
 Next, we grab the key-value pairs by splitting on `";"`, and we can add
@@ -132,13 +61,11 @@ Since the value of `AF_EXAC` is a string, we have to cast it to `float` before
 evaluating the allele frequency. 
 
 ```{python parse_line}
-def parse_line(vcf_string: str) -> Optional[List[str]]:
+def parse_line(vcf_string: str) -> List[str]:
     """Parse a line of a VCF file for the allele
     frequency AF_EXAC and return a list of diseases
     for that entry if the allele frequency is
-    < 0.0001. Returns None if AF_EXAC is not found
-    in the line, or if the allele frequency >
-    0.0001.
+    < 0.0001.
 
     Args:
         vcf_string (str): A non-metadata line of a VCF
@@ -147,7 +74,7 @@ def parse_line(vcf_string: str) -> Optional[List[str]]:
         1	1014451	475281	C	T	.	.	AF_EXAC=0.0077226;CLNDN=Immunodeficiency_38_with_basal_ganglia_calcification
 
     Returns:
-        Optional[List[str]]: List of diseases found or None if nothing was found.
+        List[str]: List of diseases found or None if nothing was found.
     """
     attrs = {}
 
@@ -159,6 +86,7 @@ def parse_line(vcf_string: str) -> Optional[List[str]]:
     for part in filter(
         None, info.strip().split(";")
     ):  # if .strip().split() returns "", filter will remove from list
+      # filter(None, ...) evaluates truthiness, not just explicit None
         if "=" in part:
             k, v = part.split("=", 1)
             attrs[k.strip()] = v.strip()
@@ -168,7 +96,7 @@ def parse_line(vcf_string: str) -> Optional[List[str]]:
     if allele_freq is None:
         return []
 
-    if float(allele_freq) <= 0.0001:
+    if float(allele_freq) < 0.0001:
         return _filter_CLNDN(attrs["CLNDN"])
 
     return []
@@ -176,12 +104,12 @@ def parse_line(vcf_string: str) -> Optional[List[str]]:
 
 ## _filter_CLNDN helper function
 
-We added an additional helper function to filter out the CLNDN key
+I added an additional helper function to filter out the CLNDN key
 if the disease was `not_specified` or `not_provided`. Diseases are separated
 by `"|"` so we just use `.split("|")` to return a list of all of the diseases. 
 
 ```{python _filter_CLNDN helper}
-def _filter_CLNDN(clndn_str: str) -> Optional[List[str]]:
+def _filter_CLNDN(clndn_str: str) -> List[str]:
     """Take in the value of CLNDN parsed out of a VCF file
     and return a list of diseases.
 
@@ -192,14 +120,14 @@ def _filter_CLNDN(clndn_str: str) -> Optional[List[str]]:
         Example: Myasthenic_syndrome|Breast_cancer
 
     Returns:
-        Optional[List[str]]: List of diseases parsed by the "|".
+        List[str]: List of diseases parsed by the "|".
         Diseases that are "not_specified" or "not_provided" are
         not returned.
     """
     strings_to_filter = ["not_specified", "not_provided"]
-    clndn_str_filtered = clndn_str.split("|")
+    clndn_str_split = clndn_str.split("|")
     return [
-        disease for disease in clndn_str_filtered if disease not in strings_to_filter
+        disease for disease in clndn_str_split if disease not in strings_to_filter
     ]
 ```
 
@@ -211,10 +139,10 @@ a dictionary of the counts with added functionality. Calling `.update()` on
 each new list will update the counts. 
 
 ```{python read_file}
-def read_file(file_name: str) -> Optional[Counter[str]]:
+def read_file(file_name: str) -> Counter[str]:
     """Read in a VCF file and return a dictionary of
     diseases counts found to be associated with allele
-    frequencies of >0.0001. Counts represent the number
+    frequencies of < 0.0001. Counts represent the number
     that each associated disease was found across
     all variants.
 
@@ -222,11 +150,9 @@ def read_file(file_name: str) -> Optional[Counter[str]]:
         file_name (str): VCF file to read
 
     Returns:
-        Optional[dict]: Dictionary of disease counts
+        Counter[str]: Dictionary of disease counts
         from all variants. Example:
         {"Breast_cancer": 20, ...}
-        Will return None if no diseases are found for
-        variants of frequency < 0.0001.
     """
 
     disease_count = Counter()
@@ -245,81 +171,3 @@ def read_file(file_name: str) -> Optional[Counter[str]]:
 if __name__ == "__main__":
     pprint(read_file("clinvar_20190923_short.vcf"))
 ```
-
-# Successes/Learning Points
-* Getting a file open and reading in the text line by line.
-* Confirming both python and Rmd coding environments are up and running.
-* Source control situation (github) established
-* Ability to work with another student in class, even in another time zone!
-* Confirmed solution with alternate solution.
-
-# Struggles
-Challenges faced with this project:
-
-  1. Jacque: had not used strings in Python much and reading 
-  files in my prior class--we were encouraged to use data sets 
-  that used functions that were included by libraries already.  
-  I found myself looking up a lot of stuff, but I expect this to 
-  get better over time. 
-  
-  2. Jacque: No/little knowledge of editting or debugging in 
-  RStudio or Visual Studio Code.  Prior python coding was done 
-  exclusively on Google Colab.   Still working on this, but 
-  I have decided that I will be working with Visual Studio Code 
-  as an IDE, then importing the python code into an Rmd file that 
-  will be formated by RStudio.  Debugging and coding Python on 
-  RStudio is awkward at best.
-  
-  3. Jacque: No prior knowledge of cluster programming, no 
-  prior use of submitting scripts to be run overnight, etc.   I 
-  have UNIX experience, which does help some, but logging 
-  in with the OnDemand system confuses me a bit, to know when I'm 
-  truly logged out.  I worry that I have mutliple sessions that 
-  are still running somewhere in the background on one of the 
-  servers.   Additionally I do not understand the disk layout that 
-  I'm supposed to be using.  Is tilde/courses/BINF6250* the same 
-  as /courses/BINF6250*?  It was indicated in class that I should 
-  be "working" in /courses/BINF6250*/.../caldwell.ja/... so I will 
-  do that.
-
-  4. Jacque: No prior knowledge of github.  The last source control 
-  system I've used didn't have a graphical user interface, and was 
-  run by terminal commands and Bourne shell scripts.  It allowed 
-  one user to edit a file at a time, and forced a "checkout" of a 
-  file in order to modify it.  Snapshots of an application system 
-  were done by taking version values for all of the source files in
-  a product, and saving them, so that an entire snapshot could be 
-  retieved at a later date.  Git is a different beast, and I'm still 
-  struggling with the "concepts" behind it.  It's a process.
-
-  5. Jacque:Teams:  My experience with Teams is only from interviews 
-  and occasional meetings being done over Teams (they send me a link, 
-  I click on it).  Can desktops be shared?  Individual windows?
-  
-  6. Jacque: No prior knowledge of RMD; though I have used something 
-  similar in the very distant past.  I now have the R markdown cheat 
-  sheet in my favorites.  Additionally I have formated code from my 
-  partner that helps with making the <code> and <comment> sections 
-  separate.
-  
-# Personal Reflections
-## Group Leader
-This is a great first problem to make sure that we have our 
-programming environments set up, including the github repositories.
-Coding problem simple enough to do individually and assess different
-coding styles, and confirm solution by a different means.  I personally 
-feel that we worked well together, and the project is complete.
-
-## Other members
-Other members' reflections on the project
-
-# Appendix
-## Journal Articles/Web Rerences
-
-Sherman, M:  BINF6250, Problem 01 Problem Description, Fall 2025
-
-Lek, M., Karczewski, K., Minikel, E. et al. Analysis of protein-coding genetic variation in 60,706 humans. Nature 536, 285–291 (2016). https://doi.org/10.1038/nature19057
-
-## Generative AI Appendix
-
-
