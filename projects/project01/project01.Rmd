@@ -282,26 +282,22 @@ apparently the way to do this correctly is to surround the string with braces.
 This took a while to figure out.
 '''
 def read_file(file_name_str):
-  disease_list=list() # initiallize 
+  disease_list={} # initiallize dictionary
   with open(file_name_str,"r") as fp:
     for line in fp:
-      if (line[0] == ""):
-        return (disease_list)
       if (line[0] == "#"):
         continue # ignore header lines in file
       else:
-        temp_list = parse_line(line) # parse the line 
-        if temp_list:                 # if clinical disease states are returned, then...
-          if disease_list==0:
-            disease_list = temp_list # first line without # character at start; begin list
-          else:
-            for i_str in temp_list:
-              if i_str in disease_list: 
-                continue # remove the DUPLICATES
-              else:
-                disease_list.extend([i_str])
-               # disease_list.extend(temp_list) # add the new diseases found
-              continue
+        temp_diseases = parse_line(line) # parse the line 
+        if temp_diseases:     # if clinical disease states are returned, then...
+          for i_string in temp_diseases:
+            if (i_string) not in disease_list:
+                disease_list[i_string] = 1
+            else:
+                disease_list[i_string]+=1
+        else:
+          continue
+  return(disease_list) #return created list
         else:
           continue
   return(disease_list) #return created list
